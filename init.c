@@ -6,7 +6,7 @@
 /*   By: spascual <spascual@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 15:51:13 by spascual          #+#    #+#             */
-/*   Updated: 2024/10/17 16:28:51 by spascual         ###   ########.fr       */
+/*   Updated: 2024/10/18 16:01:42 by spascual         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,8 @@ static int	init_fork_mutex(t_rules *rules)
 	int	i;
 
 	i = 0;
-	rules->fork_mutex = malloc(sizeof(pthread_mutex_t) * rules->number_of_philosophers);
+	rules->fork_mutex = malloc(sizeof(pthread_mutex_t)
+			* rules->number_of_philosophers);
 	if (!rules->fork_mutex)
 		return (1);
 	while (i < rules->number_of_philosophers)

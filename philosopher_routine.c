@@ -6,7 +6,7 @@
 /*   By: spascual <spascual@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/11 22:18:39 by spascual          #+#    #+#             */
-/*   Updated: 2024/10/17 16:32:54 by spascual         ###   ########.fr       */
+/*   Updated: 2024/10/18 16:06:59 by spascual         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,27 +14,28 @@
 
 void	print_message(t_philo *philo, int message)
 {
-	int			time;
-	long long	aux;
+	long long	time;
 
-	aux = get_time();
-	time = aux - philo->rules->start_time;
+	time = get_time() - philo->rules->start_time;
 	pthread_mutex_lock(philo->rules->died_mutex);
 	if (philo->rules->died == 0)
 	{
 		if (message == 1)
 		{
-			printf("%d %d has taken fork %d\n", time, philo->id, philo->my_fork_id);
-			printf("%d %d has taken fork %d\n", time, philo->id, philo->r_fork_id);
+			printf("\033[0;37m[%06lld]  \033[0;34m[%03d] \033[0;36m" 
+				"has taken fork %d 🍴\n", time, philo->id, philo->my_fork_id);
+			printf("\033[0;37m[%06lld]  \033[0;34m[%03d] \033[0;36m" 
+				"has taken fork %d 🍴\n", time, philo->id, philo->r_fork_id);
 		}
 		else if (message == 2)
-			printf("%d %d is eating\n", time, philo->id);
-		else if (message == 3)
-			printf("%d %d put down forks %d and %d\n", time, philo->id, philo->my_fork_id, philo->r_fork_id);
+			printf("\033[0;37m[%06lld]  \033[0;34m[%03d] \033[0;33m" 
+				"is eating 🍝\n", time, philo->id);
 		else if (message == 4)
-			printf("%d %d is sleeping\n", time, philo->id);
+			printf("\033[0;37m[%06lld]  \033[0;34m[%03d] \033[0;35m"
+				"is sleeping 🌙\n", time, philo->id);
 		else if (message == 5)
-			printf("%d %d is thinking\n", time, philo->id);
+			printf("\033[0;37m[%06lld]  \033[0;34m[%03d] \033[0;30m"
+				"is thinking 💭\n", time, philo->id);
 	}
 	pthread_mutex_unlock(philo->rules->died_mutex);
 }
@@ -66,7 +67,6 @@ void	put_down_forks(t_philo *philo)
 	philo->x_ate++;
 	pthread_mutex_unlock(&philo->rules->fork_mutex[philo->my_fork_id - 1]);
 	pthread_mutex_unlock(&philo->rules->fork_mutex[philo->r_fork_id - 1]);
-	print_message(philo, 3);
 }
 
 void	philo_sleep_think(t_philo *philo)

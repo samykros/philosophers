@@ -6,7 +6,7 @@
 /*   By: spascual <spascual@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/19 18:44:21 by spascual          #+#    #+#             */
-/*   Updated: 2024/10/18 15:06:37 by spascual         ###   ########.fr       */
+/*   Updated: 2024/10/18 16:07:29 by spascual         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,11 +55,11 @@ int	starve(t_philo *philo)
 	return (0);
 }
 
-void	check_philosopher_status(t_rules *rules, int i)
+int	check_philosopher_status(t_rules *rules, int i)
 {
 	t_philo		*philo;
 	long long	current_time;
-	int			time;
+	long long	time;
 
 	philo = &rules->philo[i];
 	current_time = get_time();
@@ -69,10 +69,17 @@ void	check_philosopher_status(t_rules *rules, int i)
 		pthread_mutex_lock(rules->died_mutex);
 		rules->died = 1;
 		pthread_mutex_unlock(rules->died_mutex);
-		printf("%d died\n", philo->id);
+		printf("\033[0;37m[%06lld]  \033[0;34m[%03d] \033[0;31m"
+			"died 💀\n", time, philo->id);
+		return (1);
 	}
 	if (status(philo->rules) == 1)
-		printf("%d Everyone ate\n", time);
+	{
+		printf("\033[0;37m[%06lld]  \033[0;34m[...] \033[0;32m"
+			"everyone ate 😋\n", time);
+		return (1);
+	}
+	return (0);
 }
 
 void	monitor(t_rules *rules)
@@ -84,7 +91,8 @@ void	monitor(t_rules *rules)
 		i = 0;
 		while (i < rules->number_of_philosophers)
 		{
-			check_philosopher_status(rules, i);
+			if (check_philosopher_status(rules, i) == 1)
+				break ;
 			i++;
 		}
 		if (rules->died == 1)
