@@ -6,7 +6,7 @@
 /*   By: spascual <spascual@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/11 22:18:39 by spascual          #+#    #+#             */
-/*   Updated: 2024/10/18 16:06:59 by spascual         ###   ########.fr       */
+/*   Updated: 2024/10/28 16:01:58 by spascual         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@ void	print_message(t_philo *philo, int message)
 	pthread_mutex_lock(philo->rules->died_mutex);
 	if (philo->rules->died == 0)
 	{
+		pthread_mutex_unlock(philo->rules->died_mutex);
+		pthread_mutex_lock(philo->rules->print_mutex);
 		if (message == 1)
 		{
 			printf("\033[0;37m[%06lld]  \033[0;34m[%03d] \033[0;36m" 
@@ -36,8 +38,10 @@ void	print_message(t_philo *philo, int message)
 		else if (message == 5)
 			printf("\033[0;37m[%06lld]  \033[0;34m[%03d] \033[0;30m"
 				"is thinking 💭\n", time, philo->id);
+		pthread_mutex_unlock(philo->rules->print_mutex);
 	}
-	pthread_mutex_unlock(philo->rules->died_mutex);
+	else
+		pthread_mutex_unlock(philo->rules->died_mutex);
 }
 
 void	take_forks(t_philo *philo)
@@ -57,14 +61,18 @@ void	take_forks(t_philo *philo)
 
 void	philo_eat(t_philo *philo)
 {
+	pthread_mutex_lock(philo->p_mutex);
 	philo->t_last_ate = get_time();
+	pthread_mutex_unlock(philo->p_mutex);
 	print_message(philo, 2);
 	ft_usleep(philo->rules->time_to_eat * 1000);
 }
 
 void	put_down_forks(t_philo *philo)
 {
+	pthread_mutex_lock(philo->p_mutex);
 	philo->x_ate++;
+	pthread_mutex_unlock(philo->p_mutex);
 	pthread_mutex_unlock(&philo->rules->fork_mutex[philo->my_fork_id - 1]);
 	pthread_mutex_unlock(&philo->rules->fork_mutex[philo->r_fork_id - 1]);
 }

@@ -6,7 +6,7 @@
 /*   By: spascual <spascual@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/19 18:44:21 by spascual          #+#    #+#             */
-/*   Updated: 2024/10/18 16:07:29 by spascual         ###   ########.fr       */
+/*   Updated: 2024/10/28 16:13:38 by spascual         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,10 @@ int	status(t_rules *rules)
 		return (0);
 	while (i < rules->number_of_philosophers)
 	{
-		if (rules->philo[i].x_ate < min_ate)
-			min_ate = rules->philo[i].x_ate;
+		pthread_mutex_lock(rules->philo[i]->p_mutex);
+		if (rules->philo[i]->x_ate < min_ate)
+			min_ate = rules->philo[i]->x_ate;
+		pthread_mutex_unlock(rules->philo[i]->p_mutex);
 		i++;
 	}
 	if (min_ate == rules->nb_philo_must_eat)
@@ -47,7 +49,9 @@ int	starve(t_philo *philo)
 	while (i < philo->rules->number_of_philosophers)
 	{
 		aux = get_time();
-		time = aux - philo[i].t_last_ate;
+		pthread_mutex_lock(philo->p_mutex);
+		time = aux - philo->t_last_ate;
+		pthread_mutex_unlock(philo->p_mutex);
 		if (time > philo->rules->time_to_die)
 			return (1);
 		i++;
@@ -61,22 +65,26 @@ int	check_philosopher_status(t_rules *rules, int i)
 	long long	current_time;
 	long long	time;
 
-	philo = &rules->philo[i];
+	philo = rules->philo[i];
 	current_time = get_time();
 	time = current_time - rules->start_time;
-	if (starve(rules->philo) == 1)
+	if (starve(rules->philo[i]) == 1)
 	{
 		pthread_mutex_lock(rules->died_mutex);
 		rules->died = 1;
 		pthread_mutex_unlock(rules->died_mutex);
+		pthread_mutex_lock(rules->print_mutex);
 		printf("\033[0;37m[%06lld]  \033[0;34m[%03d] \033[0;31m"
 			"died 💀\n", time, philo->id);
+		pthread_mutex_unlock(rules->print_mutex);
 		return (1);
 	}
 	if (status(philo->rules) == 1)
 	{
+		pthread_mutex_lock(rules->print_mutex);
 		printf("\033[0;37m[%06lld]  \033[0;34m[...] \033[0;32m"
 			"everyone ate 😋\n", time);
+		pthread_mutex_unlock(rules->print_mutex);
 		return (1);
 	}
 	return (0);
@@ -97,6 +105,6 @@ void	monitor(t_rules *rules)
 		}
 		if (rules->died == 1)
 			break ;
-		ft_usleep(10000);
+		ft_usleep(5000);
 	}
 }

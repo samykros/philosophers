@@ -6,25 +6,29 @@
 /*   By: spascual <spascual@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/02 15:51:13 by spascual          #+#    #+#             */
-/*   Updated: 2024/10/18 16:01:42 by spascual         ###   ########.fr       */
+/*   Updated: 2024/10/28 15:41:08 by spascual         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
-static int	init_died_mutex(t_rules *rules)
+static int	init_other_mutex(t_rules *rules)
 {
 	rules->died_mutex = malloc(sizeof(pthread_mutex_t));
-	if (!rules->died_mutex)
+	rules->print_mutex = malloc(sizeof(pthread_mutex_t));
+	if (!rules->died_mutex || !rules->print_mutex)
 	{
 		free(rules->fork_mutex);
 		free(rules->died_mutex);
+		free(rules->print_mutex);
 		return (1);
 	}
-	if (pthread_mutex_init(rules->died_mutex, NULL) != 0)
+	if (pthread_mutex_init(rules->died_mutex, NULL) != 0
+		|| pthread_mutex_init(rules->print_mutex, NULL) != 0)
 	{
 		free(rules->fork_mutex);
 		free(rules->died_mutex);
+		free(rules->print_mutex);
 		return (1);
 	}
 	return (0);
@@ -35,22 +39,25 @@ static int	init_philosophers(t_rules *rules)
 	int	i;
 
 	i = 0;
-	rules->philo = malloc(rules->number_of_philosophers * sizeof(t_philo));
+	rules->philo = malloc(rules->number_of_philosophers * sizeof(t_philo *));
 	rules->died = 0;
 	if (!rules->philo)
 		return (1);
 	while (i <= (rules->number_of_philosophers - 1))
 	{
-		rules->philo[i].id = i + 1;
-		rules->philo[i].x_ate = 0;
-		rules->philo[i].my_fork_id = i + 1;
-		rules->philo[i].r_fork_id = i + 2;
-		rules->philo[i].t_last_ate = get_time();
-		rules->philo[i].rules = rules;
+		rules->philo[i] = malloc(sizeof(t_philo));
+		rules->philo[i]->id = i + 1;
+		rules->philo[i]->x_ate = 0;
+		rules->philo[i]->my_fork_id = i + 1;
+		rules->philo[i]->r_fork_id = i + 2;
+		rules->philo[i]->t_last_ate = get_time();
+		rules->philo[i]->rules = rules;
+		rules->philo[i]->p_mutex = malloc(sizeof(pthread_mutex_t));
+		pthread_mutex_init(rules->philo[i]->p_mutex, NULL);
 		i++;
 	}
 	i--;
-	rules->philo[i].r_fork_id = 1;
+	rules->philo[i]->r_fork_id = 1;
 	return (0);
 }
 
@@ -98,7 +105,7 @@ int	init(t_rules *rules, char **argv)
 		return (1);
 	if (init_philosophers(rules) != 0)
 		return (1);
-	if (init_fork_mutex(rules) != 0 || init_died_mutex(rules) != 0)
+	if (init_fork_mutex(rules) != 0 || init_other_mutex(rules) != 0)
 		return (1);
 	return (0);
 }
